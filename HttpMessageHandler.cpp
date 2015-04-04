@@ -1,6 +1,5 @@
 // Dependencies
 #include "HttpMessageHandler.h"
-#include "FossaUtils.h"
 #include "SharedMemoryRenderer.h"
 #include "Utils.h"
 #include "sharedmemory.h"

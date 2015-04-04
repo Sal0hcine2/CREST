@@ -55,6 +55,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Users\Nick\Documents\Code\CREST\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -79,13 +80,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fossa.c" />
     <ClCompile Include="CRESTServer.cpp" />
     <ClCompile Include="SharedMemoryRenderer.cpp" />
     <ClCompile Include="HttpMessageHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FossaUtils.h" />
     <ClInclude Include="SharedMemoryRenderer.h" />
     <ClInclude Include="HttpMessageHandler.h" />
     <ClInclude Include="Utils.h" />
