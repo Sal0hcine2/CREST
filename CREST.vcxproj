@@ -14,7 +14,7 @@
     <ProjectGuid>{0F8E15F7-8365-4955-BC62-F91558F76878}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SMS_MapTest</RootNamespace>
-    <ProjectName>CREST</ProjectName>
+    <ProjectName>CREST_Nick</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -42,6 +42,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\static-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\dll-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib;C:\Users\Nicks\Documents\Code\CREST\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -55,11 +57,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\Users\Nick\Documents\Code\CREST\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Nicks\Documents\Code\CREST\include;F:\Users\Nick\Documents\Code\CREST\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\Nicks\Documents\Code\CREST\curl-7.40.0-devel-mingw32\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libcurl_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -91,6 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\zdll.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="curl-7.40.0-devel-mingw32\bin\libcurl.dll" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
