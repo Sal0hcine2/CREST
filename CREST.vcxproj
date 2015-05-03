@@ -14,7 +14,7 @@
     <ProjectGuid>{0F8E15F7-8365-4955-BC62-F91558F76878}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SMS_MapTest</RootNamespace>
-    <ProjectName>CREST_Nick</ProjectName>
+    <ProjectName>TrakR</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -42,8 +42,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\static-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\dll-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib;C:\Users\Nicks\Documents\Code\CREST\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Users\Nick\Documents\Code\CREST\third-party\libcurl\lib\dll-debug;F:\Users\Nick\Documents\Code\CREST\third-party\libcurl\lib;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\static-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib\dll-debug;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\lib;C:\Users\Nicks\Documents\Code\CREST\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\Users\Nick\Documents\Code\CREST\third-party\rapidjson;F:\Users\Nick\Documents\Code\CREST\third-party\libcurl\include;C:\Users\Nicks\Documents\Code\CREST\third-party\libcurl\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -90,7 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SharedMemoryRenderer.h" />
-    <ClInclude Include="HttpMessageHandler.h" />
+    <ClInclude Include="MessageHandler.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

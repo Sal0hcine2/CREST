@@ -7,5 +7,5 @@ public:
 	SharedMemoryRenderer();
 	// Renders the shared memory into a string representation
 	// The queryString determines which sections are rendered or not
-	std::string render(const SharedMemory* sharedData, std::string queryString);
+	std::string render(const SharedMemory* sharedData, std::string queryString, std::string race_id);
 };

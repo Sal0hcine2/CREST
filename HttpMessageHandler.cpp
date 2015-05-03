@@ -2,12 +2,16 @@
 #include <windows.h>
 #include "WinNT.h"
 #include "memoryapi.h"
-#include "HttpMessageHandler.h"
+#include "MessageHandler.h"
 #include "SharedMemoryRenderer.h"
 #include "Utils.h"
 #include "sharedmemory.h"
 #include <sstream>
-
+#include <curl/curl.h>
+#include "document.h"
+#include "writer.h"
+#include "stringbuffer.h"
+#include <iostream>
 
 // Constants
 #define MAP_OBJECT_NAME "$pcars$"
@@ -17,7 +21,14 @@
 
 static SharedMemoryRenderer sharedMemoryRenderer = SharedMemoryRenderer();
 
-HttpMessageHandler::HttpMessageHandler(){};
+MessageHandler::MessageHandler(){};
+
+CURL *curl;
+CURLcode res;
+std::string data;
+HANDLE fileHandle;
+const SharedMemory* sharedData;
+
 
 // Outputs an HTTP 200 on the supplied connection for an OPTIONS request
 void sendOptions()    {
@@ -46,54 +57,111 @@ void sendServiceUnavailable()    {
 // Returns true if the response to the given HTTP message should
 // be gzipped, based on the value of the Accept-Encoding header
 // and the size of the uncompressed response
-bool shouldGzipResponse(struct http_message *hm, int responseLength)	{
+bool shouldGzipResponse(int responseLength)	{
 	return false; // Utils::contains(FossaUtils::getHeaderValue("Accept-Encoding", hm), "gzip") && responseLength > GZIP_THRESHOLD;
 }
 
-// Renders the response
-void renderResponse(const SharedMemory* sharedData, struct http_message *hm)  {
+size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
+{ //callback must have this declaration
+	//buf is a pointer to the data that curl has for us
+	//size*nmemb is the size of the buffer
 
-	std::string responseJson = sharedMemoryRenderer.render(sharedData, "participants");
+	for (int c = 0; c<size*nmemb; c++)
+	{
+		data.push_back(buf[c]);
+	}
+	return size*nmemb; //tell curl how many bytes we handled
+}
+
+std::string curlResponse(std::string url, std::string JSON){
+
+	// Instantiate CURL object
+	curl = curl_easy_init();
+
+	if (curl) {
+		// Set the URL
+		curl_easy_setopt(curl, CURLOPT_URL, url.data());
+
+		// Do some dodgey wrapping of the JSON into a DATA field.
+		std::string postField = "data=" + JSON;
+
+		curl_easy_setopt(curl, CURLOPT_POST, 1);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postField.data());
+		//curl_easy_setopt(curl, CURLOPT_RETURNTRANSFER, true);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if (res != CURLE_OK){
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+			curl_easy_strerror(res));
+		}
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+
+		return data;
+	}
+
+	return "";
+}
+
+// Retrieves the race_id from the JSON response
+std::string getRaceID(std::string data){
+
+	// Parse the JSON into a document
+	rapidjson::Document response;
+	response.Parse(data.data());
+
+	// Get the value from the document
+	rapidjson::Value& raceID_value = response["race_id"];
+
+	// Get the string of the raceID_value
+	std::string race_id = raceID_value.GetString();
+
+
+	return race_id;
+}
+
+// Renders the response
+void renderResponse(const SharedMemory* sharedData)  {
 	std::string response;
 
-	bool gzipResponse = shouldGzipResponse(hm, responseJson.size());
+	//Register Race Details
+	response = sharedMemoryRenderer.render(sharedData, "eventInformation", "");
+	//printf(response.data());
 
-	if (gzipResponse)	{
-		response = Utils::gzipString(responseJson);
-	}else{
-		response = responseJson;
-	}
+	// Post to Server and get the race_id
+	//std::string race_id = getRaceID(curlResponse("http://pcars.garland.io/api/5555/race", response));
+	std::string race_id = "554632eb585022e92b302698";
+	//printf(race_id.data());
 
-	// build HTTP OK response with JSON response body
-	printf("HTTP/1.1 200 OK\r\n"
-		"Content-Type: application/json\r\n"
-		"Cache-Control: no-cache\r\n"
-        "Access-Control-Allow-Origin: *\r\n");
-	if (gzipResponse)	{
-		printf("Content-Encoding: gzip\r\n");
-	}
-	printf("Content-Length: %d\r\n\r\n",
-		(int)response.size());
-	response.data(); response.size();
-
+	// Now add some participants
+	response = sharedMemoryRenderer.render(sharedData, "participants", race_id);
+	printf(response.data());
+	//std::string a = curlResponse("http://pcars.garland.io/api/5555/participants", response);
+	//printf(a.data());
+	//printf(response.data());
 }
 
 // Processes the shared memory
-void processSharedMemoryData(const SharedMemory* sharedData, struct http_message *hm)   {
+void processSharedMemoryData(const SharedMemory* sharedData)   {
 	// Ensure we're sync'd to the correct data version
 	if (sharedData->mVersion != SHARED_MEMORY_VERSION)	{
 		// build conflict response
 		printf("Data version mismatch, please make sure that your pCARS version matches your CREST version\n");
 	}else{
-		renderResponse(sharedData, hm);
+		renderResponse(sharedData);
 	}
 
 }
 
 // Processes the memory mapped file
-void processFile(HANDLE fileHandle, struct http_message *hm)    {
+void processFile(HANDLE fileHandle)    {
 
-	const SharedMemory* sharedData = (SharedMemory*)MapViewOfFile(fileHandle, PAGE_READONLY, 0, 0, sizeof(SharedMemory));
+	sharedData = (SharedMemory*)MapViewOfFile(fileHandle, PAGE_READONLY, 0, 0, sizeof(SharedMemory));
 
 	if (sharedData == NULL)	{
 		// File found, but could not be mapped to shared memory data
@@ -101,16 +169,16 @@ void processFile(HANDLE fileHandle, struct http_message *hm)    {
 	}
 	else{
 		// Process file
-		processSharedMemoryData(sharedData, hm);
+		processSharedMemoryData(sharedData);
 		// Unmap file
 		UnmapViewOfFile(sharedData);
 	}
 
 }
 
-void handleGet(struct http_message *hm)    {
+void handleGet()    {
     // Open the memory mapped file
-    HANDLE fileHandle = OpenFileMappingA(PAGE_READONLY, FALSE, MAP_OBJECT_NAME);
+    fileHandle = OpenFileMappingA(PAGE_READONLY, FALSE, MAP_OBJECT_NAME);
     
     if (fileHandle == NULL)	{
         // File is not available, build service unavailable response
@@ -118,8 +186,49 @@ void handleGet(struct http_message *hm)    {
     }
     else{
         // File is available, process the file
-        processFile(fileHandle, hm);
+        processFile(fileHandle);
         // Close the file
         CloseHandle(fileHandle);
     }
+}
+
+void MessageHandler::handle()	{
+	handleGet();
+}
+
+SharedMemory* getSharedData(){
+	HANDLE fHandle = OpenFileMappingA(PAGE_READONLY, FALSE, MAP_OBJECT_NAME);
+	return (SharedMemory*)MapViewOfFile(fHandle, PAGE_READONLY, 0, 0, sizeof(SharedMemory));
+}
+
+int MessageHandler::getRaceState(){
+	return getSharedData()->mRaceState;
+}
+
+int MessageHandler::getCompletedLaps(){
+	SharedMemory* data =  getSharedData();
+	
+	return getSharedData()->mParticipantInfo->mLapsCompleted;
+}
+
+
+std::string MessageHandler::createRace(){
+
+	std::string response = sharedMemoryRenderer.render(getSharedData(), "eventInformation", "");
+
+	// Post to Server and get the race_id
+	return getRaceID(curlResponse("http://pcars.garland.io/api/5555/race", response));
+
+}
+
+std::string MessageHandler::addParticipants(std::string race_id){
+	std::string response = sharedMemoryRenderer.render(getSharedData(), "participants", race_id);
+
+	return curlResponse("http://pcars.garland.io/api/5555/participants", response);
+}
+
+std::string MessageHandler::updateParticipants(std::string race_id){
+	std::string response = sharedMemoryRenderer.render(getSharedData(), "participants", race_id);
+
+	return curlResponse("http://pcars.garland.io/api/5555/participants", response);
 }

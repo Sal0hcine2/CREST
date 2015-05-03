@@ -16,15 +16,29 @@ void renderGameStates(std::stringstream& ss, const SharedMemory* sharedData)	{
 	ss << "\"mRaceState\":" << sharedData->mRaceState << "}";
 }
 
-void renderParticipant(std::stringstream& ss, const ParticipantInfo participantInfo)	{
+void renderParticipant(std::stringstream& ss, const ParticipantInfo participantInfo, const SharedMemory* sharedData, bool isPlayer)	{
+
 	ss << "{\"mIsActive\":" << (participantInfo.mIsActive ? "true" : "false") << ",";
 	ss << "\"mName\":\"" << participantInfo.mName << "\",";
-	ss << "\"mWorldPosition\":[" << participantInfo.mWorldPosition[0] << "," << participantInfo.mWorldPosition[1] << "," << participantInfo.mWorldPosition[2] << "],";
-	ss << "\"mCurrentLapDistance\":" << participantInfo.mCurrentLapDistance << ",";
+	//ss << "\"mWorldPosition\":[" << participantInfo.mWorldPosition[0] << "," << participantInfo.mWorldPosition[1] << "," << participantInfo.mWorldPosition[2] << "],";
+	//ss << "\"mCurrentLapDistance\":" << participantInfo.mCurrentLapDistance << ",";
 	ss << "\"mRacePosition\":" << participantInfo.mRacePosition << ",";
 	ss << "\"mLapsCompleted\":" << participantInfo.mLapsCompleted << ",";
-	ss << "\"mCurrentLap\":" << participantInfo.mCurrentLap << ",";
-	ss << "\"mCurrentSector\":" << participantInfo.mCurrentSector << "}";
+	ss << "\"mCurrentLap\":" << participantInfo.mCurrentLap;
+	//ss << "\"mCurrentSector\":" << participantInfo.mCurrentSector << "}";
+
+	if (isPlayer){
+		ss << ",";
+		ss << "\"timings\":{";
+		ss << "\"mLapInvalidated\":" << (sharedData->mLapInvalidated ? "true" : "false") << ",";
+		ss << "\"mLastLapTime\":" << sharedData->mLastLapTime << ",";
+		ss << "\"mSplitTimeAhead\":" << sharedData->mSplitTimeAhead << ",";
+		ss << "\"mSplitTimeBehind\":" << sharedData->mSplitTimeBehind << ",";
+		ss << "\"mSplitTime\":" << sharedData->mSplitTime;
+		ss << "}";
+	}
+
+	ss << "}";
 }
 
 void renderParticipants(std::stringstream& ss, const SharedMemory* sharedData)	{
@@ -37,7 +51,11 @@ void renderParticipants(std::stringstream& ss, const SharedMemory* sharedData)	{
 		ss << "\"mParticipantInfo\":[";
 
 		for (int i = 0; i < sharedData->mNumParticipants; i++)	{
-			renderParticipant(ss, sharedData->mParticipantInfo[i]);
+			bool isPlayer = false;
+
+			if (i == sharedData->mViewedParticipantIndex) isPlayer = true;
+
+			renderParticipant(ss, sharedData->mParticipantInfo[i], sharedData, isPlayer);
 			if (i < (sharedData->mNumParticipants - 1))	{
 				ss << ",";
 			}
@@ -194,21 +212,25 @@ void addSeparator(std::stringstream& ss, bool skip)	{
 // Returns true if the given section should be rendered, based on the presence
 // of the sections name parameter in the query string
 bool shouldRender(std::string queryString, std::string sectionName)	{
-	std::stringstream ss;
-	ss << sectionName << "=true";
-	return queryString.empty() || Utils::contains(queryString, ss.str());
+	return queryString.empty() || Utils::contains(queryString, sectionName);
 }
 
-std::string SharedMemoryRenderer::render(const SharedMemory* sharedData, std::string queryString)	{
+std::string SharedMemoryRenderer::render(const SharedMemory* sharedData, std::string queryString, std::string race_id)	{
 
 	std::stringstream ss;
 
 	ss << "{";
+
+	if (!race_id.empty()){
+		ss << "\"race_id\": \"" << race_id.data() << "\",";
+	}
+
 	bool skipSeparator = true;
 	if (shouldRender(queryString, "buildInfo"))	{
 		renderBuildInfo(ss, sharedData);
 		skipSeparator = false;
 	}
+
 	if (shouldRender(queryString, "gameStates"))	{
 		addSeparator(ss, skipSeparator);
 		renderGameStates(ss, sharedData);
