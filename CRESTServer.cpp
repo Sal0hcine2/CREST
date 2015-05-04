@@ -9,7 +9,7 @@
 
 
 // Configuration properties
-#define CREST_VERSION "v1.0.1"
+#define CREST_VERSION "v0.1"
 #define POLL_TIME_IN_MILLIS 17
 #define ESC_KEY 27
 #define CREST_API_URL "/crest/v1/api"
@@ -34,8 +34,8 @@ int main()	{
 	MessageHandler messageHandler = MessageHandler();
 	
 	// Print some information on the console
-	printf("# CREST - CARS REST API %s\n", CREST_VERSION);
-	printf("# (c) 2015 Lars Rosenquist\n\n");
+	printf("# TrakR %s - Based on CREST - CARS REST API\n", CREST_VERSION);
+	printf("# (c) 2015 Lars Rosenquist, Nick Garland\n\n");
 	printf("# Press ESC to terminate\n");	
 	
 	// Keep polling until ESC is hit

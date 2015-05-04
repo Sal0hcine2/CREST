@@ -198,10 +198,16 @@ void MessageHandler::handle()	{
 
 SharedMemory* getSharedData(){
 	HANDLE fHandle = OpenFileMappingA(PAGE_READONLY, FALSE, MAP_OBJECT_NAME);
+
 	return (SharedMemory*)MapViewOfFile(fHandle, PAGE_READONLY, 0, 0, sizeof(SharedMemory));
 }
 
 int MessageHandler::getRaceState(){
+	SharedMemory* sharedData = getSharedData();
+	
+	if (sharedData == NULL){
+		return -1;
+	}
 	return getSharedData()->mRaceState;
 }
 
